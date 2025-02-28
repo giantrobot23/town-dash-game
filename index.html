@@ -332,25 +332,26 @@
         })();
 
         // Critical game variables with obfuscation
-let _gameState = {
-    health: 100,
-    score: 0,
-    gameOver: false,
-    matrixMode: false
-};
+        let _gameState = {
+            health: 100,
+            score: 0,
+            gameOver: false,
+            matrixMode: false
+        };
 
-// Decode game state
-const getGameState = (key) => {
-    if (typeof _gameState[key] === 'number') {
-        return _gameState[key];
-    }
-    return _gameState[key];
-};
+        // Decode game state
+        const getGameState = (key) => {
+            return _gameState[key];
+        };
 
-// Set game state
-const setGameState = (key, value) => {
-    _gameState[key] = value;
-};
+        // Set game state
+        const setGameState = (key, value) => {
+            _gameState[key] = value;
+            // Update UI immediately for score changes
+            if (key === 'score') {
+                document.getElementById('score').textContent = Math.floor(value);
+            }
+        };
 
         // Game variables
         let health = getGameState('health');
@@ -1258,16 +1259,17 @@ const setGameState = (key, value) => {
                 updateScore: function(points) {
                     if (this.validateGame()) {
                         const currentScore = getGameState('score');
-                        setGameState('score', currentScore + points);
-                        document.getElementById('score').textContent = Math.floor(getGameState('score'));
+                        const newScore = currentScore + points;
+                        setGameState('score', newScore);
                     }
                 },
 
                 updateHealth: function(amount) {
                     if (this.validateGame()) {
                         const currentHealth = getGameState('health');
-                        setGameState('health', Math.max(0, Math.min(100, currentHealth + amount)));
-                        document.getElementById('health').textContent = Math.floor(getGameState('health'));
+                        const newHealth = Math.max(0, Math.min(100, currentHealth + amount));
+                        setGameState('health', newHealth);
+                        document.getElementById('health').textContent = Math.floor(newHealth);
                     }
                 }
             };
