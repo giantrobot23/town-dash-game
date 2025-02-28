@@ -302,18 +302,25 @@
         })();
 
         // Critical game variables with obfuscation
-        let _gameState = {
-            health: _0x4f8d('99'),
-            score: _0x4f8d('0'),
-            gameOver: false,
-            matrixMode: false
-        };
+let _gameState = {
+    health: 100,
+    score: 0,
+    gameOver: false,
+    matrixMode: false
+};
 
-        // Decode game state
-        const getGameState = (key) => parseInt(_0x8f4d(_gameState[key])) || _gameState[key];
-        const setGameState = (key, value) => {
-            _gameState[key] = typeof value === 'number' ? _0x4f8d(value.toString()) : value;
-        };
+// Decode game state
+const getGameState = (key) => {
+    if (typeof _gameState[key] === 'number') {
+        return _gameState[key];
+    }
+    return _gameState[key];
+};
+
+// Set game state
+const setGameState = (key, value) => {
+    _gameState[key] = value;
+};
 
         // Game variables
         let health = getGameState('health');
