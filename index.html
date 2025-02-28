@@ -172,11 +172,18 @@
             padding: 20px;
             box-sizing: border-box;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-end;
         }
-        .control-group {
+        .control-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-left: 20px;
+        }
+        .control-row {
             display: flex;
             gap: 10px;
+            justify-content: center;
         }
         .mobile-button {
             width: 60px;
@@ -192,11 +199,15 @@
             cursor: pointer;
             user-select: none;
             backdrop-filter: blur(5px);
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
         .boost-button {
             width: 80px;
             height: 80px;
             background-color: rgba(76, 175, 80, 0.5);
+            margin-right: 20px;
         }
         
         /* Mobile-specific styles */
@@ -285,15 +296,17 @@
         <!-- Power-up status will be dynamically added here -->
     </div>
     <div id="mobile-controls">
-        <div class="control-group">
-            <div class="mobile-button" id="left-btn">⬅️</div>
-            <div class="mobile-button" id="right-btn">➡️</div>
+        <div class="control-layout">
+            <div class="control-row">
+                <div class="mobile-button" id="forward-btn">⬆️</div>
+            </div>
+            <div class="control-row">
+                <div class="mobile-button" id="left-btn">⬅️</div>
+                <div class="mobile-button" id="backward-btn">⬇️</div>
+                <div class="mobile-button" id="right-btn">➡️</div>
+            </div>
         </div>
         <div class="mobile-button boost-button" id="boost-btn">🚀</div>
-        <div class="control-group">
-            <div class="mobile-button" id="forward-btn">⬆️</div>
-            <div class="mobile-button" id="backward-btn">⬇️</div>
-        </div>
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
