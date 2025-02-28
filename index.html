@@ -388,15 +388,28 @@
         let lastMKeyTime = 0;
         let matrixRainDrops = [];
         
+        // Add ghost mode variables
+        let isGhostMode = false;
+        let ghostModeDuration = 10000; // 10 seconds
+        let ghostModeTimeout = null;
+        
+        // Add at the start of the script section
+        const isMobile = window.innerWidth <= 768;
+        
         // Initialize the game
         function init() {
             // Create scene
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0x87CEEB); // Sky blue
             
-            // Create camera (third-person view)
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(0, 10, 20);
+            // Create camera with mobile adjustments
+            camera = new THREE.PerspectiveCamera(
+                isMobile ? 60 : 75, // Narrower FOV on mobile for better visibility
+                window.innerWidth / window.innerHeight,
+                0.1,
+                1000
+            );
+            camera.position.set(0, isMobile ? 15 : 10, isMobile ? 25 : 20); // Higher and further back on mobile
             camera.lookAt(0, 0, 0);
             
             // Create renderer
@@ -432,7 +445,7 @@
             createCopCar();
             
             // Generate power-ups
-            generatePowerUps(5);
+            generatePowerUps(25);
             
             // Event listeners for controls
             document.addEventListener('keydown', onKeyDown);
@@ -450,10 +463,10 @@
         }
         
         function createRoads() {
-            // Create a simple road grid
             const roadMaterial = new THREE.MeshBasicMaterial({ color: 0x333333 });
+            const lineMaterial = new THREE.MeshBasicMaterial({ color: 0xFFFFFF });
             
-            // Horizontal roads
+            // Horizontal roads with lane markings
             for (let i = -80; i <= 80; i += 40) {
                 const road = new THREE.Mesh(
                     new THREE.PlaneGeometry(200, 10),
@@ -463,9 +476,20 @@
                 road.position.y = 0.01;
                 road.position.z = i;
                 scene.add(road);
+                
+                // Add lane markings
+                for (let x = -95; x < 95; x += 10) {
+                    const line = new THREE.Mesh(
+                        new THREE.PlaneGeometry(3, 0.5),
+                        lineMaterial
+                    );
+                    line.rotation.x = -Math.PI / 2;
+                    line.position.set(x, 0.02, i);
+                    scene.add(line);
+                }
             }
             
-            // Vertical roads
+            // Vertical roads with lane markings
             for (let i = -80; i <= 80; i += 40) {
                 const road = new THREE.Mesh(
                     new THREE.PlaneGeometry(10, 200),
@@ -475,10 +499,28 @@
                 road.position.y = 0.01;
                 road.position.x = i;
                 scene.add(road);
+                
+                // Add lane markings
+                for (let z = -95; z < 95; z += 10) {
+                    const line = new THREE.Mesh(
+                        new THREE.PlaneGeometry(0.5, 3),
+                        lineMaterial
+                    );
+                    line.rotation.x = -Math.PI / 2;
+                    line.position.set(i, 0.02, z);
+                    scene.add(line);
+                }
             }
         }
         
         function createBuildings() {
+            // Define three building colors (Blue, Purple, and Lime Green)
+            const buildingColors = [
+                0x2196F3, // Blue
+                0x9C27B0, // Purple
+                0x64DD17  // Lime Green (high contrast with red car)
+            ];
+            
             // Create simple buildings
             for (let i = 0; i < 30; i++) {
                 // Place buildings away from roads
@@ -496,7 +538,7 @@
                 
                 const buildingGeometry = new THREE.BoxGeometry(width, height, depth);
                 const buildingMaterial = new THREE.MeshBasicMaterial({
-                    color: 0x808080
+                    color: buildingColors[i % 3] // Cycle through three colors
                 });
                 
                 const building = new THREE.Mesh(buildingGeometry, buildingMaterial);
@@ -642,9 +684,9 @@
         }
         
         function generatePowerUps(count) {
+            // Generate new power-ups without clearing existing ones
             for (let i = 0; i < count; i++) {
-                // More varied power-up types
-                const types = ['health', 'speed', 'invincible', 'freeze', 'multiplier'];
+                const types = ['health', 'speed', 'invincible', 'freeze', 'multiplier', 'ghost'];
                 const type = types[Math.floor(Math.random() * types.length)];
                 
                 // Place power-ups on roads
@@ -652,36 +694,35 @@
                 const isHorizontalRoad = Math.random() > 0.5;
                 
                 if (isHorizontalRoad) {
-                    // On horizontal road
-                    const roadIndex = Math.floor(Math.random() * 5) - 2;
-                    z = roadIndex * 40;
+                    z = Math.floor(Math.random() * 5 - 2) * 40;
                     x = Math.random() * 180 - 90;
                 } else {
-                    // On vertical road
-                    const roadIndex = Math.floor(Math.random() * 5) - 2;
-                    x = roadIndex * 40;
+                    x = Math.floor(Math.random() * 5 - 2) * 40;
                     z = Math.random() * 180 - 90;
                 }
                 
                 const powerUpGeometry = new THREE.BoxGeometry(2, 2, 2);
                 let powerUpMaterial;
                 
-                // Different colors for different power-ups
+                // Add ghost mode color
                 switch(type) {
                     case 'health':
-                        powerUpMaterial = new THREE.MeshBasicMaterial({ color: 0x00FF00 }); // Green
+                        powerUpMaterial = new THREE.MeshBasicMaterial({ color: 0x00FF00 });
                         break;
                     case 'speed':
-                        powerUpMaterial = new THREE.MeshBasicMaterial({ color: 0xFFFF00 }); // Yellow
+                        powerUpMaterial = new THREE.MeshBasicMaterial({ color: 0xFFFF00 });
                         break;
                     case 'invincible':
-                        powerUpMaterial = new THREE.MeshBasicMaterial({ color: 0xFF00FF }); // Purple
+                        powerUpMaterial = new THREE.MeshBasicMaterial({ color: 0xFF00FF });
                         break;
                     case 'freeze':
-                        powerUpMaterial = new THREE.MeshBasicMaterial({ color: 0x00FFFF }); // Cyan
+                        powerUpMaterial = new THREE.MeshBasicMaterial({ color: 0x00FFFF });
                         break;
                     case 'multiplier':
-                        powerUpMaterial = new THREE.MeshBasicMaterial({ color: 0xFFA500 }); // Orange
+                        powerUpMaterial = new THREE.MeshBasicMaterial({ color: 0xFFA500 });
+                        break;
+                    case 'ghost':
+                        powerUpMaterial = new THREE.MeshBasicMaterial({ color: 0x808080 });
                         break;
                 }
                 
@@ -700,14 +741,18 @@
         function updatePlayerCar() {
             if (getGameState('gameOver')) return;
             
+            // Store previous position for collision response
+            const previousPosition = playerCar.mesh.position.clone();
+            
             // Update player car movement
             let acceleration = 0;
+            const mobileSpeedFactor = isMobile ? 0.6 : 1; // Keep mobile speed adjustment
             
             if (moveForward) {
-                acceleration = 0.05;
+                acceleration = 0.05 * mobileSpeedFactor;
             }
             if (moveBackward) {
-                acceleration = -0.05;
+                acceleration = -0.05 * mobileSpeedFactor;
             }
             
             // Apply acceleration
@@ -718,18 +763,17 @@
             
             // Apply boost - No health reduction when boosting now
             if (boosting && playerCar.speed > 0) {
-                playerCar.speed *= 1.05;
-                
-                // Still increase score for boosting/taking risks
+                playerCar.speed *= 1.03 * mobileSpeedFactor;
                 gameProtection.updateScore(0.1);
             }
             
-            // Rotate car
+            // Rotate car with mobile adjustment
+            const rotationSpeed = isMobile ? 0.04 : 0.05;
             if (moveLeft) {
-                playerCar.mesh.rotation.y += 0.05;
+                playerCar.mesh.rotation.y += rotationSpeed;
             }
             if (moveRight) {
-                playerCar.mesh.rotation.y -= 0.05;
+                playerCar.mesh.rotation.y -= rotationSpeed;
             }
             
             // Update direction vector
@@ -753,7 +797,27 @@
             // Update bounding box
             playerCar.boundingBox.setFromObject(playerCar.mesh);
             
+            // Check for building collisions only if not in ghost mode
+            if (!isGhostMode) {
+                for (const building of buildings) {
+                    if (playerCar.boundingBox.intersectsBox(building.boundingBox)) {
+                        playerCar.mesh.position.copy(previousPosition);
+                        playerCar.speed *= -0.5; // Reverse and reduce speed
+                        break;
+                    }
+                }
+            }
+            
+            // Update ghost mode visual effect
+            playerCar.mesh.traverse((child) => {
+                if (child.material) {
+                    child.material.opacity = isGhostMode ? 0.5 : 1;
+                    child.material.transparent = isGhostMode;
+                }
+            });
+            
             // Check for game over conditions
+            health = getGameState('health');
             if (health <= 0) {
                 endGame();
             }
@@ -761,18 +825,22 @@
         
         function updateCopCars() {
             if (getGameState('gameOver')) return;
-            
-            // Don't update cop positions if they're frozen
             if (copsFrozen) return;
             
-            // Spawn new cops over time
+            const currentScore = getGameState('score');
+            const maxCops = Math.min(15, Math.floor(currentScore / 100) + 1);
+            
+            // Spawn new cops based on score thresholds
             const currentTime = Date.now();
-            if (currentTime - lastCopSpawnTime > copSpawnInterval && copCars.length < 5) {
+            if (currentTime - lastCopSpawnTime > copSpawnInterval && copCars.length < maxCops) {
                 createCopCar();
                 lastCopSpawnTime = currentTime;
                 
-                // Make cops spawn faster as the game progresses
-                copSpawnInterval = Math.max(10000, copSpawnInterval - 5000);
+                // Make cops spawn faster as score increases
+                copSpawnInterval = Math.max(5000, 30000 - (currentScore / 20));
+                
+                // Update cop count in UI
+                document.getElementById('copCount').textContent = copCars.length;
             }
             
             // Find closest cop for UI distance indicator
@@ -792,8 +860,10 @@
                     closestCopDistance = distanceToPlayer;
                 }
                 
-                // Adjust cop speed based on distance (faster when closer)
-                const speed = 0.2 + Math.max(0, (100 - distanceToPlayer) / 400);
+                // Adjust cop speed based on distance and score (faster at higher scores)
+                const baseSpeed = 0.2 + (currentScore / 1000); // Increase base speed with score
+                const speedBoost = Math.max(0, (100 - distanceToPlayer) / 400);
+                const speed = baseSpeed + speedBoost;
                 
                 // Move toward player
                 copCar.mesh.position.x += direction.x * speed;
@@ -926,8 +996,12 @@
                     // Update score with multiplier
                     gameProtection.updateScore(10 * scoreMultiplier);
                     
-                    // Spawn new cop every 30 points
-                    if (Math.floor(score / 30) > copCars.length && copCars.length < 8) {
+                    // Spawn new cops based on score milestones
+                    const currentScore = getGameState('score');
+                    const maxCops = Math.min(15, Math.floor(currentScore / 100) + 1);
+                    
+                    // Only spawn new cops if we're below the maximum for the current score
+                    if (copCars.length < maxCops) {
                         createCopCar();
                     }
                     
@@ -943,11 +1017,86 @@
             }
         }
         
+        function checkPowerUpCollisions() {
+            for (let i = powerUps.length - 1; i >= 0; i--) {
+                const powerUp = powerUps[i];
+                if (playerCar.boundingBox.intersectsBox(powerUps[i].boundingBox)) {
+                    // Handle power-up collection
+                    switch(powerUps[i].type) {
+                        case 'ghost':
+                            activateGhostMode();
+                            break;
+                        case 'health':
+                            gameProtection.updateHealth(20);
+                            break;
+                        case 'speed':
+                            playerCar.speed += 0.5;
+                            gameProtection.updateScore(10);
+                            break;
+                        case 'invincible':
+                            if (powerUpTimeouts.invincible) clearTimeout(powerUpTimeouts.invincible);
+                            isInvincible = true;
+                            // Change car color to gold (except wheels)
+                            playerCar.bodyMaterial.color.setHex(0xFFD700);
+                            playerCar.topMaterial.color.setHex(0xFFD700);
+                            
+                            powerUpTimeouts.invincible = setTimeout(() => {
+                                isInvincible = false;
+                                // Reset car colors
+                                playerCar.bodyMaterial.color.setHex(0xFF0000);
+                                playerCar.topMaterial.color.setHex(0xCC0000);
+                            }, 10000);
+                            gameProtection.updateScore(15);
+                            break;
+                        case 'freeze':
+                            if (powerUpTimeouts.freeze) clearTimeout(powerUpTimeouts.freeze);
+                            copsFrozen = true;
+                            // Make cops flash blue and white when frozen
+                            let flashCount = 0;
+                            const flashInterval = setInterval(() => {
+                                copCars.forEach(cop => {
+                                    const color = flashCount % 2 === 0 ? 0x00FFFF : 0xFFFFFF;
+                                    cop.mesh.traverse((child) => {
+                                        if (child.isMesh) {
+                                            child.material.color.setHex(color);
+                                        }
+                                    });
+                                });
+                                flashCount++;
+                            }, 500);
+                            
+                            powerUpTimeouts.freeze = setTimeout(() => {
+                                copsFrozen = false;
+                                clearInterval(flashInterval);
+                                copCars.forEach(cop => {
+                                    cop.mesh.children[0].material.color.setHex(0x0000FF);
+                                    cop.mesh.children[1].material.color.setHex(0x0000CC);
+                                });
+                            }, 5000);
+                            gameProtection.updateScore(20);
+                            break;
+                        case 'multiplier':
+                            if (powerUpTimeouts.multiplier) clearTimeout(powerUpTimeouts.multiplier);
+                            scoreMultiplier = 2;
+                            powerUpTimeouts.multiplier = setTimeout(() => {
+                                scoreMultiplier = 1;
+                            }, 15000);
+                            gameProtection.updateScore(10);
+                            break;
+                    }
+                    
+                    // Remove collected power-up
+                    scene.remove(powerUp.mesh);
+                    powerUps.splice(i, 1);
+                }
+            }
+        }
+        
         function checkBuildingCollisions() {
-            // Check for collisions with buildings
+            if (isGhostMode) return; // Skip collision check if in ghost mode
+            
             for (const building of buildings) {
                 if (playerCar.boundingBox.intersectsBox(building.boundingBox)) {
-                    // Only bounce back, no damage
                     playerCar.speed *= -0.5;
                     break;
                 }
@@ -1104,7 +1253,7 @@
             // Clear and regenerate power-ups
             powerUps.forEach(powerUp => scene.remove(powerUp.mesh));
             powerUps = [];
-            generatePowerUps(5);
+            generatePowerUps(25);
             
             // Reset power-up effects
             isInvincible = false;
@@ -1122,8 +1271,8 @@
             };
             
             // Reset player car color properly
-            playerCar.bodyMaterial.color.setHex(0xFF0000);
-            playerCar.topMaterial.color.setHex(0xCC0000);
+            playerCar.bodyMaterial.setHex(0xFF0000);
+            playerCar.topMaterial.setHex(0xCC0000);
         }
         
         // Add new start game function
@@ -1149,15 +1298,15 @@
         function animate() {
             requestAnimationFrame(animate);
             
-            if (!getGameState('gameOver') && gameStarted) {
-                updatePlayerCar();
-                updateCopCars();
-                updatePowerUps();
-                checkBuildingCollisions();
-                updateCamera();
-                if (getGameState('matrixMode')) {
-                    drawMatrixRain();
-                }
+            if (!gameStarted || getGameState('gameOver')) return;
+            
+            updatePlayerCar();
+            updateCopCars();
+            updatePowerUps();
+            checkPowerUpCollisions();
+            updateCamera();
+            if (getGameState('matrixMode')) {
+                drawMatrixRain();
             }
             
             renderer.render(scene, camera);
@@ -1341,6 +1490,26 @@
 
         // Prevent default touch behaviors
         document.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+
+        // Add ghost mode activation
+        function activateGhostMode() {
+            isGhostMode = true;
+            // Make car semi-transparent
+            playerCar.bodyMaterial.transparent = true;
+            playerCar.topMaterial.transparent = true;
+            playerCar.bodyMaterial.opacity = 0.5;
+            playerCar.topMaterial.opacity = 0.5;
+            
+            if (ghostModeTimeout) clearTimeout(ghostModeTimeout);
+            
+            ghostModeTimeout = setTimeout(() => {
+                isGhostMode = false;
+                playerCar.bodyMaterial.transparent = false;
+                playerCar.topMaterial.transparent = false;
+                playerCar.bodyMaterial.opacity = 1;
+                playerCar.topMaterial.opacity = 1;
+            }, ghostModeDuration);
+        }
     </script>
 </body>
 </html>
