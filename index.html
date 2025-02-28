@@ -237,6 +237,17 @@
             font-size: 1.2em;
             text-shadow: 0 0 5px #0F0;
         }
+
+        .mobile-button {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        #mobile-controls {
+            touch-action: none;
+        }
     </style>
 </head>
 <body>
@@ -1241,6 +1252,55 @@ const setGameState = (key, value) => {
             document.getElementById('instructions').style.display = 'block';
             startGame();
         });
+
+        // Add mobile control listeners
+        document.getElementById('forward-btn').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            moveForward = true;
+        });
+        document.getElementById('forward-btn').addEventListener('touchend', (e) => {
+            e.preventDefault();
+            moveForward = false;
+        });
+
+        document.getElementById('backward-btn').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            moveBackward = true;
+        });
+        document.getElementById('backward-btn').addEventListener('touchend', (e) => {
+            e.preventDefault();
+            moveBackward = false;
+        });
+
+        document.getElementById('left-btn').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            moveLeft = true;
+        });
+        document.getElementById('left-btn').addEventListener('touchend', (e) => {
+            e.preventDefault();
+            moveLeft = false;
+        });
+
+        document.getElementById('right-btn').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            moveRight = true;
+        });
+        document.getElementById('right-btn').addEventListener('touchend', (e) => {
+            e.preventDefault();
+            moveRight = false;
+        });
+
+        document.getElementById('boost-btn').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            boosting = true;
+        });
+        document.getElementById('boost-btn').addEventListener('touchend', (e) => {
+            e.preventDefault();
+            boosting = false;
+        });
+
+        // Prevent default touch behaviors
+        document.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
     </script>
 </body>
 </html>
