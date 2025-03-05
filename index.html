@@ -825,7 +825,6 @@
         
         function updateCopCars() {
             if (getGameState('gameOver')) return;
-            if (copsFrozen) return;
             
             const currentScore = getGameState('score');
             const maxCops = Math.min(15, Math.floor(currentScore / 100) + 1);
@@ -860,19 +859,22 @@
                     closestCopDistance = distanceToPlayer;
                 }
                 
-                // Adjust cop speed based on distance and score (faster at higher scores)
-                const baseSpeed = 0.2 + (currentScore / 1000); // Increase base speed with score
-                const speedBoost = Math.max(0, (100 - distanceToPlayer) / 400);
-                const speed = baseSpeed + speedBoost;
-                
-                // Move toward player
-                copCar.mesh.position.x += direction.x * speed;
-                copCar.mesh.position.z += direction.z * speed;
-                
-                // Rotate to face direction of travel
-                if (direction.length() > 0) {
-                    const targetRotation = Math.atan2(direction.x, direction.z);
-                    copCar.mesh.rotation.y = targetRotation;
+                // Only move cops if they're not frozen
+                if (!copsFrozen) {
+                    // Adjust cop speed based on distance and score (faster at higher scores)
+                    const baseSpeed = 0.2 + (currentScore / 1000); // Increase base speed with score
+                    const speedBoost = Math.max(0, (100 - distanceToPlayer) / 400);
+                    const speed = baseSpeed + speedBoost;
+                    
+                    // Move toward player
+                    copCar.mesh.position.x += direction.x * speed;
+                    copCar.mesh.position.z += direction.z * speed;
+                    
+                    // Rotate to face direction of travel
+                    if (direction.length() > 0) {
+                        const targetRotation = Math.atan2(direction.x, direction.z);
+                        copCar.mesh.rotation.y = targetRotation;
+                    }
                 }
                 
                 // Update bounding box
@@ -883,7 +885,8 @@
                 if (distanceToPlayer < 5 && 
                     currentTime - playerCar.lastCopCatch > playerImmunityTime &&
                     currentTime - copCar.lastCatchTime > playerImmunityTime &&
-                    !isInvincible) { // Don't take damage if invincible
+                    !isInvincible && // Don't take damage if invincible
+                    !copsFrozen) {  // Don't take damage if cops are frozen
                     
                     // Reduce health when caught by cop
                     health -= 20;
